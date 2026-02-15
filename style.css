@@ -1,0 +1,261 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html, body {
+    height: 100%;
+    overflow: hidden;
+}
+
+body {
+    font-family: 'Noto Naskh Arabic', 'Amiri', serif;
+    background: #f7f4ef;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 4px 6px;
+}
+
+/* ========== TABS ========== */
+.tab-container {
+    display: flex;
+    gap: 8px;
+    flex-shrink: 0;
+    padding: 3px 0;
+}
+
+.tab-btn {
+    padding: 5px 20px;
+    font-family: 'Noto Naskh Arabic', serif;
+    font-size: 0.9rem;
+    font-weight: 700;
+    border: 2px solid #1a7a3a;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background: white;
+    color: #1a7a3a;
+}
+
+.tab-btn.active {
+    background: #1a7a3a;
+    color: white;
+}
+
+/* ========== BOOK ========== */
+.book-container {
+    width: 100%;
+    max-width: 540px;
+    flex: 1;
+    min-height: 0;
+}
+
+/* ========== PAGE ========== */
+.page {
+    display: none;
+    flex-direction: column;
+    justify-content: center;
+    background: #fffef9;
+    border-radius: 10px;
+    height: 100%;
+    box-shadow:
+        0 0 0 3px #1a7a3a,
+        0 0 0 5px #c5a44e,
+        0 0 0 7px #1a7a3a;
+    overflow: hidden;
+}
+
+.page.active {
+    display: flex;
+}
+
+/* ========== PAGE CONTENT — scrolls internally ========== */
+.page-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    padding: 10px 14px;
+    overflow-y: auto;
+}
+
+.page-content::-webkit-scrollbar {
+    width: 3px;
+}
+
+.page-content::-webkit-scrollbar-thumb {
+    background: #1a7a3a30;
+    border-radius: 3px;
+}
+
+/* ========== PAGE FOOTER ========== */
+.page-footer {
+    text-align: center;
+    font-size: 0.65rem;
+    color: #1a7a3a;
+    font-weight: 700;
+    padding: 2px;
+    background: linear-gradient(135deg, #1a7a3a, #2d9e50);
+    color: white;
+    flex-shrink: 0;
+}
+
+/* ========== SINGLE DHIKR CARD ========== */
+.dhikr-card {
+    text-align: center;
+    padding: 3px 0;
+    position: relative;
+}
+
+.dhikr-card:not(:last-child)::after {
+    content: '';
+    display: block;
+    width: 40%;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, #c5a44e, transparent);
+    margin: 4px auto 0;
+}
+
+.dhikr-text {
+    font-size: 1rem;
+    line-height: 1.8;
+    color: #1a2e1a;
+    font-weight: 600;
+    word-spacing: 2px;
+}
+
+/* ========== NAVIGATION ========== */
+.nav-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    width: 100%;
+    max-width: 540px;
+    flex-shrink: 0;
+    padding: 3px 0;
+}
+
+.nav-arrow {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: 2px solid #1a7a3a;
+    background: white;
+    color: #1a7a3a;
+    font-size: 1.1rem;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+}
+
+.nav-arrow:hover {
+    background: #1a7a3a;
+    color: white;
+}
+
+.nav-arrow:disabled {
+    opacity: 0.2;
+    cursor: not-allowed;
+    background: white;
+    color: #1a7a3a;
+}
+
+.page-indicator {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: #1a7a3a;
+    min-width: 60px;
+    text-align: center;
+}
+
+/* ========== EDIT MODE ========== */
+.edit-toggle-btn {
+    padding: 3px 14px;
+    font-family: 'Noto Naskh Arabic', serif;
+    font-size: 0.7rem;
+    font-weight: 700;
+    border: 1.5px solid #c5a44e;
+    border-radius: 15px;
+    cursor: pointer;
+    background: white;
+    color: #c5a44e;
+    transition: all 0.3s ease;
+    flex-shrink: 0;
+}
+
+.edit-toggle-btn.active {
+    background: #c5a44e;
+    color: white;
+}
+
+.dhikr-card.edit-mode {
+    border: 1px dashed #c5a44e;
+    border-radius: 6px;
+    padding: 4px;
+    background: rgba(197, 164, 78, 0.04);
+}
+
+.dhikr-card.edit-mode:not(:last-child)::after {
+    display: none;
+}
+
+.reorder-controls {
+    display: flex;
+    justify-content: center;
+    gap: 6px;
+    margin-bottom: 2px;
+}
+
+.reorder-btn {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    border: 1.5px solid #1a7a3a;
+    background: white;
+    color: #1a7a3a;
+    font-size: 0.75rem;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.reorder-btn:disabled {
+    opacity: 0.2;
+    cursor: not-allowed;
+}
+
+.edit-hint {
+    text-align: center;
+    font-size: 0.7rem;
+    color: #c5a44e;
+    font-weight: 600;
+    padding: 3px;
+    margin-bottom: 4px;
+}
+
+/* ========== RESPONSIVE ========== */
+@media (max-width: 500px) {
+    .dhikr-text {
+        font-size: 0.92rem;
+        line-height: 1.75;
+    }
+
+    .tab-btn {
+        padding: 4px 16px;
+        font-size: 0.85rem;
+    }
+
+    .nav-arrow {
+        width: 32px;
+        height: 32px;
+        font-size: 1rem;
+    }
+}
