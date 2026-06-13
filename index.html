@@ -3,30 +3,42 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>أذكار الصباح والمساء</title>
-    <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Noto+Naskh+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <title>أذكاري</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Naskh+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
+    <main class="app-shell">
+        <header class="app-header">
+            <div>
+                <p class="eyebrow">وردك اليومي</p>
+                <h1>أذكاري</h1>
+            </div>
+            <button class="icon-button" id="resetProgress" type="button" aria-label="إعادة ضبط تقدم اليوم" title="إعادة ضبط تقدم اليوم">
+                ↻
+            </button>
+        </header>
 
-    <!-- Tab Selector -->
-    <div class="tab-container">
-        <button class="tab-btn active" id="tab-morning" onclick="switchTab('morning')">☀️ أذكار الصباح</button>
-        <button class="tab-btn" id="tab-evening" onclick="switchTab('evening')">🌙 أذكار المساء</button>
-    </div>
+        <nav class="tabs" aria-label="أقسام الأذكار">
+            <button class="tab active" type="button" data-category="morning">الصباح</button>
+            <button class="tab" type="button" data-category="evening">المساء</button>
+            <button class="tab" type="button" data-category="sleep">النوم</button>
+        </nav>
 
-    <!-- Edit Mode Toggle -->
-    <button class="edit-toggle-btn" id="editToggle" onclick="toggleEditMode()">✏️ تعديل الترتيب</button>
+        <section class="summary" aria-live="polite">
+            <div>
+                <span class="summary-label">القسم الحالي</span>
+                <strong id="categoryTitle">أذكار الصباح</strong>
+            </div>
+            <div class="progress-ring" aria-label="نسبة الإنجاز">
+                <span id="progressPercent">0%</span>
+            </div>
+        </section>
 
-    <!-- Book -->
-    <div class="book-container" id="book"></div>
-
-    <!-- Navigation -->
-    <div class="nav-container">
-        <button class="nav-arrow nav-next" id="btnNext" onclick="goToPage(currentPage + 1)">→</button>
-        <div class="page-indicator" id="pageIndicator">١ / ١</div>
-        <button class="nav-arrow nav-prev" id="btnPrev" onclick="goToPage(currentPage - 1)">←</button>
-    </div>
+        <section class="dhikr-list" id="dhikrList" aria-label="قائمة الأذكار"></section>
+    </main>
 
     <script src="data.js"></script>
     <script src="app.js"></script>

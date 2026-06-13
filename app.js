@@ -1,184 +1,131 @@
-// ============ STATE ============
-let currentTab = 'morning';
-let currentPage = 1;
-let editMode = false;
+const state = {
+    category: "morning",
+    progress: {}
+};
 
-// Custom order stored per tab — deep copy from defaults, then override from localStorage
-let customMorningPages = JSON.parse(JSON.stringify(morningPages));
-let customEveningPages = JSON.parse(JSON.stringify(eveningPages));
+const tabs = document.querySelectorAll(".tab");
+const list = document.getElementById("dhikrList");
+const title = document.getElementById("categoryTitle");
+const percent = document.getElementById("progressPercent");
+const resetButton = document.getElementById("resetProgress");
 
-// Load saved order from localStorage (v2 key to avoid stale data from old layout)
-(function loadSavedOrder() {
+function getCategory() {
+    return azkarCategories[state.category];
+}
+
+function loadProgress(categoryKey) {
+    const category = azkarCategories[categoryKey];
+
     try {
-        var savedMorning = localStorage.getItem('azkar_morning_order_v2');
-        var savedEvening = localStorage.getItem('azkar_evening_order_v2');
-        if (savedMorning) customMorningPages = JSON.parse(savedMorning);
-        if (savedEvening) customEveningPages = JSON.parse(savedEvening);
-    } catch (e) {}
-})();
-
-function getAzkar() {
-    return currentTab === 'morning' ? morningAzkar : eveningAzkar;
-}
-
-function getPages() {
-    return currentTab === 'morning' ? customMorningPages : customEveningPages;
-}
-
-function saveOrder() {
-    try {
-        localStorage.setItem('azkar_morning_order_v2', JSON.stringify(customMorningPages));
-        localStorage.setItem('azkar_evening_order_v2', JSON.stringify(customEveningPages));
-    } catch (e) {}
-}
-
-// ============ BUILD DHIKR CARD HTML ============
-function buildDhikrCard(dhikr, pageIdx, posInPage, totalInPage) {
-    var html = '<div class="dhikr-card' + (editMode ? ' edit-mode' : '') + '">';
-
-    if (editMode) {
-        var isFirst = posInPage === 0;
-        var isLast = posInPage === totalInPage - 1;
-        html += '<div class="reorder-controls">';
-        html += '<button class="reorder-btn" onclick="moveDhikr(' + pageIdx + ',' + posInPage + ',-1)" ' + (isFirst ? 'disabled' : '') + '>▲</button>';
-        html += '<button class="reorder-btn" onclick="moveDhikr(' + pageIdx + ',' + posInPage + ',1)" ' + (isLast ? 'disabled' : '') + '>▼</button>';
-        html += '</div>';
+        return JSON.parse(localStorage.getItem(category.storageKey)) || {};
+    } catch (error) {
+        return {};
     }
-
-    html += '<div class="dhikr-text">' + dhikr.text.replace(/\n/g, '<br>') + '</div>';
-
-    html += '</div>';
-    return html;
 }
 
-// ============ RENDER ============
-function renderPages() {
-    var book = document.getElementById('book');
-    var azkar = getAzkar();
-    var pages = getPages();
-    var totalPages = pages.length;
-    book.innerHTML = '';
+function saveProgress() {
+    const category = getCategory();
+    localStorage.setItem(category.storageKey, JSON.stringify(state.progress));
+}
 
-    // Dhikr pages (no title page — jump straight to azkar)
-    pages.forEach(function(dhikrIds, pageIdx) {
-        var pageNum = pageIdx + 1;
-        var pageDiv = document.createElement('div');
-        pageDiv.className = 'page' + (currentPage === pageNum ? ' active' : '');
+function getCompletedCount() {
+    const category = getCategory();
 
-        var cardsHtml = '';
-        if (editMode) {
-            cardsHtml += '<div class="edit-hint">استخدم الأسهم لتغيير ترتيب الأذكار <button class="reorder-btn" style="display:inline-flex;width:auto;padding:2px 10px;font-size:0.75rem;border-radius:10px;" onclick="resetOrder()">إعادة الترتيب الأصلي</button></div>';
-        }
-        dhikrIds.forEach(function(id, posInPage) {
-            var dhikr = azkar.find(function(d) { return d.id === id; });
-            if (dhikr) {
-                cardsHtml += buildDhikrCard(dhikr, pageIdx, posInPage, dhikrIds.length);
-            }
-        });
+    return category.items.reduce(function(total, item) {
+        return total + Math.min(state.progress[item.id] || 0, item.count);
+    }, 0);
+}
 
-        pageDiv.innerHTML =
-            '<div class="page-content">' + cardsHtml + '</div>' +
-            '<div class="page-footer">' + pageNum + ' / ' + totalPages + '</div>';
+function getTotalCount() {
+    return getCategory().items.reduce(function(total, item) {
+        return total + item.count;
+    }, 0);
+}
 
-        book.appendChild(pageDiv);
+function updateSummary() {
+    const total = getTotalCount();
+    const completed = getCompletedCount();
+    const value = total === 0 ? 0 : Math.round((completed / total) * 100);
+
+    title.textContent = getCategory().title;
+    percent.textContent = value + "%";
+    document.documentElement.style.setProperty("--progress", value + "%");
+}
+
+function escapeHtml(value) {
+    return String(value)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+}
+
+function renderList() {
+    const category = getCategory();
+    list.innerHTML = "";
+
+    category.items.forEach(function(item) {
+        const done = Math.min(state.progress[item.id] || 0, item.count);
+        const remaining = Math.max(item.count - done, 0);
+        const complete = remaining === 0;
+        const card = document.createElement("article");
+
+        card.className = "dhikr-card" + (complete ? " complete" : "");
+        card.innerHTML = [
+            '<div class="card-top">',
+            '<span class="counter">' + done + " / " + item.count + "</span>",
+            item.note ? '<span class="note">' + escapeHtml(item.note) + "</span>" : "",
+            "</div>",
+            '<p class="dhikr-text">' + escapeHtml(item.text) + "</p>",
+            item.fadl ? '<p class="dhikr-fadl">' + escapeHtml(item.fadl) + "</p>" : "",
+            '<button class="count-button" type="button" data-id="' + item.id + '"' + (complete ? " disabled" : "") + ">",
+            complete ? "تم الذكر" : "تكرار متبقّي: " + remaining,
+            "</button>"
+        ].join("");
+
+        list.appendChild(card);
     });
 
-    updateNav(totalPages);
+    updateSummary();
 }
 
-// ============ NAVIGATION ============
-function goToPage(index) {
-    var pages = getPages();
-    if (index < 1 || index > pages.length) return;
-    currentPage = index;
-    renderPages();
+function setCategory(categoryKey) {
+    state.category = categoryKey;
+    state.progress = loadProgress(categoryKey);
+
+    tabs.forEach(function(tab) {
+        tab.classList.toggle("active", tab.dataset.category === categoryKey);
+    });
+
+    renderList();
 }
 
-function updateNav(totalPages) {
-    var btnPrev = document.getElementById('btnPrev');
-    var btnNext = document.getElementById('btnNext');
-    var indicator = document.getElementById('pageIndicator');
+list.addEventListener("click", function(event) {
+    const button = event.target.closest(".count-button");
+    if (!button) return;
 
-    btnPrev.disabled = currentPage <= 1;
-    btnNext.disabled = currentPage >= totalPages;
-    indicator.textContent = currentPage + ' / ' + totalPages;
-}
+    const item = getCategory().items.find(function(entry) {
+        return entry.id === button.dataset.id;
+    });
 
-// ============ EDIT MODE ============
-function toggleEditMode() {
-    editMode = !editMode;
-    var btn = document.getElementById('editToggle');
-    btn.classList.toggle('active', editMode);
-    btn.textContent = editMode ? '✓ حفظ الترتيب' : '✏️ تعديل الترتيب';
-    if (!editMode) {
-        saveOrder();
-    }
-    renderPages();
-}
+    if (!item) return;
 
-function moveDhikr(pageIdx, posInPage, direction) {
-    var pages = getPages();
-    var page = pages[pageIdx];
-    var newPos = posInPage + direction;
-    if (newPos < 0 || newPos >= page.length) return;
-
-    // Swap
-    var temp = page[posInPage];
-    page[posInPage] = page[newPos];
-    page[newPos] = temp;
-
-    saveOrder();
-    renderPages();
-}
-
-function resetOrder() {
-    if (currentTab === 'morning') {
-        customMorningPages = JSON.parse(JSON.stringify(morningPages));
-    } else {
-        customEveningPages = JSON.parse(JSON.stringify(eveningPages));
-    }
-    saveOrder();
-    renderPages();
-}
-
-// ============ TABS ============
-function switchTab(tab) {
-    currentTab = tab;
-    currentPage = 1;
-    document.getElementById('tab-morning').classList.toggle('active', tab === 'morning');
-    document.getElementById('tab-evening').classList.toggle('active', tab === 'evening');
-    renderPages();
-}
-
-// ============ SWIPE SUPPORT ============
-var touchStartX = 0;
-
-document.addEventListener('touchstart', function(e) {
-    touchStartX = e.changedTouches[0].screenX;
-}, false);
-
-document.addEventListener('touchend', function(e) {
-    var touchEndX = e.changedTouches[0].screenX;
-    var diff = touchStartX - touchEndX;
-    var pages = getPages();
-    if (Math.abs(diff) < 50) return;
-
-    if (diff > 0) {
-        if (currentPage > 0) goToPage(currentPage - 1);
-    } else {
-        if (currentPage < pages.length) goToPage(currentPage + 1);
-    }
-}, false);
-
-// ============ KEYBOARD ============
-document.addEventListener('keydown', function(e) {
-    var pages = getPages();
-    if (e.key === 'ArrowRight' && currentPage < pages.length) {
-        goToPage(currentPage + 1);
-    } else if (e.key === 'ArrowLeft' && currentPage > 0) {
-        goToPage(currentPage - 1);
-    }
+    state.progress[item.id] = Math.min((state.progress[item.id] || 0) + 1, item.count);
+    saveProgress();
+    renderList();
 });
 
-// ============ INIT ============
-renderPages();
+tabs.forEach(function(tab) {
+    tab.addEventListener("click", function() {
+        setCategory(tab.dataset.category);
+    });
+});
+
+resetButton.addEventListener("click", function() {
+    state.progress = {};
+    saveProgress();
+    renderList();
+});
+
+setCategory(state.category);
